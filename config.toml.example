@@ -1,0 +1,3 @@
+jira_url = "https://myhost.atlassian.net/rest/api/3"
+email = ""
+api_key = ""
