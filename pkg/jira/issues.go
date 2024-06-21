@@ -2,8 +2,10 @@ package jira
 
 import (
 	"encoding/json"
+	"math/rand"
 	"net/http"
 	"net/url"
+	"time"
 )
 
 type IssueResponse struct {
@@ -47,4 +49,14 @@ func SearchIssues(client *Client, params url.Values) (*IssueResponse, error) {
 	}
 
 	return &resp, nil
+}
+
+func EstimateStoryPoints() int {
+	nthInSequence := rand.Intn(8)
+	a, b := 0, 1
+	for i := 2; i <= nthInSequence; i++ {
+		a, b = b, a+b
+	}
+
+	return b
 }
