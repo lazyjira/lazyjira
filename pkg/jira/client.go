@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/matthewrobinsondev/lazyjira/internal/config"
+	"github.com/matthewrobinsondev/lazyjira/pkg/config"
 )
 
 type ClientInterface interface {
@@ -29,10 +29,10 @@ func NewClient(cfg *config.Config) *Client {
 	}
 }
 
-func (c *Client) NewRequest(method, endpoint string, params url.Values, body io.Reader) (string, error) {
+func (c *Client) NewRequest(method, endpoint string, params url.Values, body io.Reader) ([]byte, error) {
 	req, err := http.NewRequest(method, fmt.Sprintf("%s%s?%s", c.BaseURL, endpoint, params.Encode()), body)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	req.Header.Add("Authorization", "Basic "+c.BasicAuthHeader)
@@ -40,14 +40,14 @@ func (c *Client) NewRequest(method, endpoint string, params url.Values, body io.
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	defer resp.Body.Close()
 
 	responseBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return string(responseBody), nil
+	return responseBody, nil
 }

@@ -1,7 +1,7 @@
 package jira_test
 
 import (
-	"github.com/matthewrobinsondev/lazyjira/internal/jira"
+	"github.com/matthewrobinsondev/lazyjira/pkg/jira"
 	"testing"
 )
 
@@ -16,6 +16,14 @@ func TestJQLBuilder_Equals(t *testing.T) {
 func TestJQLBuilder_In(t *testing.T) {
 	builder := jira.NewJQLBuilder().In("status", []string{"Open", "In Progress", "Closed"})
 	expected := `status IN ("Open", "In Progress", "Closed")`
+	if result := builder.Build(); result != expected {
+		t.Errorf("Expected %s, got %s", expected, result)
+	}
+}
+
+func TestJQLBuilder_NotIn(t *testing.T) {
+	builder := jira.NewJQLBuilder().NotIn("status", []string{"Done", "Closed"})
+	expected := `status NOT IN ("Done", "Closed")`
 	if result := builder.Build(); result != expected {
 		t.Errorf("Expected %s, got %s", expected, result)
 	}

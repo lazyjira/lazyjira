@@ -3,11 +3,14 @@ package main
 import (
 	"fmt"
 	"log"
-	"net/http"
-	"net/url"
 
-	"github.com/matthewrobinsondev/lazyjira/internal/config"
-	"github.com/matthewrobinsondev/lazyjira/internal/jira"
+	"os"
+
+	"github.com/matthewrobinsondev/lazyjira/pkg/config"
+	"github.com/matthewrobinsondev/lazyjira/pkg/jira"
+	"github.com/matthewrobinsondev/lazyjira/pkg/tui"
+
+	tea "github.com/charmbracelet/bubbletea"
 )
 
 func main() {
@@ -17,17 +20,10 @@ func main() {
 	}
 
 	jiraClient := jira.NewClient(cfg)
-	builder := jira.NewJQLBuilder().
-		Equals("assignee", "currentUser()", true).
-		In("status", []string{"Done", "Closed", "Resolved"})
+	p := tea.NewProgram(tui.NewTuiModel(jiraClient))
 
-	jqlQuery := builder.Build()
-
-	fmt.Println(jqlQuery)
-
-	params := url.Values{}
-	params.Add("jql", jqlQuery)
-	params.Add("fields", "summary,status")
-
-	fmt.Println(jiraClient.NewRequest(http.MethodGet, "/search", params, nil))
+	if _, err := p.Run(); err != nil {
+		fmt.Fprintf(os.Stderr, "Could not start the program: %v\n", err)
+		os.Exit(1)
+	}
 }
