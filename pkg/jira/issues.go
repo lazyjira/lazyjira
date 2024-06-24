@@ -32,6 +32,19 @@ type Status struct {
 	ID          string `json:"id"`
 }
 
+func (i Issue) Title() string {
+	return i.Key + ": " + i.Fields.Summary
+}
+
+func (i Issue) Description() string {
+	return ""
+}
+
+// TODO: Broken
+func (i Issue) FilterValue() string {
+	return i.Key + " " + i.Fields.Summary
+}
+
 func SearchIssues(client *Client, params url.Values) (*IssueResponse, error) {
 	apiResp, err := client.NewRequest(http.MethodGet, "/search", params, nil)
 
