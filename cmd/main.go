@@ -20,7 +20,7 @@ func main() {
 	}
 
 	jiraClient := jira.NewClient(cfg)
-	p := tea.NewProgram(tui.NewTuiModel(jiraClient))
+	p := tea.NewProgram(tui.NewTuiModel(jiraClient), tea.WithAltScreen())
 
 	if _, err := p.Run(); err != nil {
 		fmt.Fprintf(os.Stderr, "Could not start the program: %v\n", err)

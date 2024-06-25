@@ -1,45 +1,44 @@
 package tui
 
 import (
-	"fmt"
-	"log"
-	"net/url"
-
+	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/matthewrobinsondev/lazyjira/pkg/jira"
 )
 
 type model struct {
-	cursor int
-	issues []jira.Issue
-	chosen map[int]struct{}
+	focus  focusState
 	ready  bool
+	panel  panel
+	lists  [3]list.Model
+	width  int
+	height int
 }
 
 func NewTuiModel(client *jira.Client) *model {
-	builder := jira.NewJQLBuilder().
-		Equals("assignee", "currentUser()", true).
-		NotIn("status", []string{"Done", "Closed", "Resolved"})
-
-	jqlQuery := builder.Build()
-
-	fmt.Println(jqlQuery)
-
-	params := url.Values{}
-	params.Add("jql", jqlQuery)
-	params.Add("fields", "summary,status")
-
-	resp, err := jira.SearchIssues(client, params)
-
-	if err != nil {
-		log.Fatalf("Error loading configuration: %v", err)
+	m := &model{
+		ready: false,
 	}
 
-	return &model{
-		issues: resp.Issues,
-		chosen: make(map[int]struct{}),
-		ready:  true,
+	m.panel.tabs = []string{"Tab 1", "Tab 2", "Tab 3"}
+	m.panel.tabContent = []string{
+		"Content for Tab 1",
+		"Content for Tab 2",
+		"Content for Tab 3",
 	}
+
+	defaultList := list.NewDefaultDelegate()
+	defaultList.ShowDescription = false
+
+	// TODO: I feel I can probably leverage go routines or something here?
+	m.createAssignedIssuesList(client, defaultList)
+	m.createProjectsList(client, defaultList)
+	m.createEpicsList(client, defaultList)
+
+	m.ready = true
+
+	return m
 }
 
 func (m *model) Init() tea.Cmd {
@@ -47,47 +46,66 @@ func (m *model) Init() tea.Cmd {
 }
 
 func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var cmd tea.Cmd
+	var cmds []tea.Cmd
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		switch msg.Type {
-		case tea.KeyCtrlC, tea.KeyEsc:
+		switch msg.String() {
+		case "ctrl+c", "q":
 			return m, tea.Quit
-		case tea.KeyUp:
-			if m.cursor > 0 {
-				m.cursor--
-			}
-		case tea.KeyDown:
-			if m.cursor < len(m.issues)-1 {
-				m.cursor++
-			}
-		case tea.KeyEnter:
-			_, ok := m.chosen[m.cursor]
-			if ok {
-				delete(m.chosen, m.cursor)
+		case "tab":
+			m.focus = (m.focus + 1) % 3
+		case "shift+tab":
+			m.focus = (m.focus + 2) % 3
+		// TODO: this will need redoing in the future but for demo purposes works atm
+		case "]":
+			m.panel.activeTab = (m.panel.activeTab + 1) % len(m.panel.tabs)
+			return m, nil
+		case "[":
+			if m.panel.activeTab > 0 {
+				m.panel.activeTab--
 			} else {
-				m.chosen[m.cursor] = struct{}{}
+				m.panel.activeTab = len(m.panel.tabs) - 1
+			}
+			return m, nil
+		}
+		// honestly not sure if this is the best way but it works
+		if m.focus >= focusOnList1 && m.focus <= focusOnList3 {
+			listIndex := int(m.focus) - int(focusOnList1)
+			if listIndex >= 0 && listIndex < len(m.lists) {
+				m.lists[listIndex], cmd = m.lists[listIndex].Update(msg)
+				cmds = append(cmds, cmd)
 			}
 		}
+	case tea.WindowSizeMsg:
+		m.width = msg.Width
+		m.height = msg.Height
+		thirdWidth := m.width / 3
+		for i := range m.lists {
+			m.lists[i].SetWidth(thirdWidth)
+			m.lists[i].SetHeight((m.height / 3) - 2)
+		}
 	}
-	return m, nil
+
+	return m, tea.Batch(cmds...)
 }
 
 func (m *model) View() string {
 	if !m.ready {
 		return "Loading..."
 	}
-	s := "Jira Issues:\n\n"
-	for i, issue := range m.issues {
-		cursor := " "
-		if m.cursor == i {
-			cursor = ">"
+
+	var views []string
+	for i, list := range m.lists {
+		listStyle := unfocusedStyle
+		if m.focus == focusState(focusOnList1+focusState(i)) {
+			listStyle = focusedStyle
 		}
-		checked := " "
-		if _, ok := m.chosen[i]; ok {
-			checked = "x"
-		}
-		s += fmt.Sprintf("%s [%s] %s\n", cursor, checked, issue.Fields.Summary)
+		views = append(views, listStyle.Render(list.View()))
 	}
-	s += "\nPress esc to quit.\n"
-	return s
+
+	listView := lipgloss.JoinVertical(lipgloss.Top, views...)
+	panelView := m.panel.View()
+	mainView := lipgloss.JoinHorizontal(lipgloss.Top, listView, panelView)
+	return mainView
 }
