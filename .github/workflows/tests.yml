@@ -13,4 +13,4 @@ jobs:
       - name: Install dependencies
         run: go mod tidy
       - name: Test with the Go CLI
-        run: go test
+        run: go test ./...
