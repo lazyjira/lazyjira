@@ -25,7 +25,7 @@ func NewClient(cfg *config.Config) *Client {
 	return &Client{
 		httpClient:      httpClient,
 		BaseURL:         cfg.JiraURL,
-		BasicAuthHeader: base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", cfg.Email, cfg.APIKey))),
+		BasicAuthHeader: base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", cfg.Email, cfg.AccessToken))),
 	}
 }
 
