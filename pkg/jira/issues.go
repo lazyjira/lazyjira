@@ -45,7 +45,7 @@ func (i Issue) FilterValue() string {
 	return i.Key + " " + i.Fields.Summary
 }
 
-func SearchIssues(client *Client, params url.Values) (*IssueResponse, error) {
+func SearchIssues(client ClientInterface, params url.Values) (*IssueResponse, error) {
 	apiResp, err := client.NewRequest(http.MethodGet, "/search", params, nil)
 
 	if err != nil {

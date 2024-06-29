@@ -11,7 +11,7 @@ import (
 )
 
 type ClientInterface interface {
-	NewRequest(method, endpoint string, params url.Values, body io.Reader) (*http.Request, error)
+	NewRequest(method, endpoint string, params url.Values, body io.Reader) ([]byte, error)
 }
 
 type Client struct {
@@ -30,7 +30,13 @@ func NewClient(cfg *config.Config) *Client {
 }
 
 func (c *Client) NewRequest(method, endpoint string, params url.Values, body io.Reader) ([]byte, error) {
-	req, err := http.NewRequest(method, fmt.Sprintf("%s%s?%s", c.BaseURL, endpoint, params.Encode()), body)
+	url := fmt.Sprintf("%s%s", c.BaseURL, endpoint)
+
+	if params != nil {
+		url = url + fmt.Sprintf("?%s", params.Encode())
+	}
+
+	req, err := http.NewRequest(method, url, body)
 	if err != nil {
 		return nil, err
 	}

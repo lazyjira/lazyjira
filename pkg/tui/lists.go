@@ -38,12 +38,11 @@ func (m *model) createAssignedIssuesList(client *jira.Client, defaults list.Defa
 }
 
 func (m *model) createProjectsList(client *jira.Client, defaults list.DefaultDelegate) *model {
-	// TODO: Get Projects endpoint
-	issues, _ := getAssignedIssues(client)
+	projects, _ := getRecentProjects(client)
 
 	var items []list.Item
-	for _, issue := range issues {
-		items = append(items, issue)
+	for _, project := range projects {
+		items = append(items, project)
 	}
 
 	m.lists[1] = list.New(items, defaults, 30, 15)
@@ -84,5 +83,14 @@ func getAssignedIssues(client *jira.Client) ([]jira.Issue, error) {
 	}
 
 	return resp.Issues, nil
+}
 
+func getRecentProjects(client *jira.Client) ([]jira.Project, error) {
+	projects, err := jira.GetRecentProjects(client)
+
+	if err != nil {
+		log.Fatalf("Error loading configuration: %v", err)
+	}
+
+	return projects, nil
 }
