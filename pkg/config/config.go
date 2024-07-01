@@ -25,6 +25,7 @@ type ConfigProvider interface {
 const CONFIG_DIR = ".config/lazyjira/"
 const CONFIG_NAME = "config"
 const CONFIG_TYPE = "toml"
+const CONFIG_DIR_PERM = 0755
 
 func NewConfigService() ConfigProvider {
 	return ConfigService{
@@ -50,7 +51,7 @@ func (c ConfigService) getFilename() string {
 }
 
 func (c ConfigService) createIfNotExist() error {
-	if err := os.MkdirAll(c.getBasePath(), 0755); err != nil {
+	if err := os.MkdirAll(c.getBasePath(), CONFIG_DIR_PERM); err != nil {
 		return err
 	}
 
