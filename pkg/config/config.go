@@ -20,6 +20,7 @@ type ConfigService struct {
 type ConfigProvider interface {
 	Load() (*Config, error)
 	Save(config Config) error
+	Exists() bool
 }
 
 const CONFIG_DIR = ".config/lazyjira/"
@@ -50,14 +51,22 @@ func (c ConfigService) getFilename() string {
 	return CONFIG_NAME + "." + CONFIG_TYPE
 }
 
+func (c ConfigService) checkConfigExists() bool {
+	_, err := os.Stat(c.getFullPath())
+
+	if errors.Is(err, os.ErrNotExist) {
+		return false
+	}
+
+	return true
+}
+
 func (c ConfigService) createIfNotExist() error {
 	if err := os.MkdirAll(c.getBasePath(), CONFIG_DIR_PERM); err != nil {
 		return err
 	}
 
-	_, err := os.Stat(c.getFullPath())
-
-	if errors.Is(err, os.ErrNotExist) {
+	if !c.checkConfigExists() {
 		file, err := os.OpenFile(c.getFullPath(), os.O_RDONLY|os.O_CREATE, 0644)
 		if err != nil {
 			return err
@@ -110,4 +119,8 @@ func (c ConfigService) Save(config Config) error {
 	}
 
 	return nil
+}
+
+func (c ConfigService) Exists() bool {
+	return c.checkConfigExists()
 }
