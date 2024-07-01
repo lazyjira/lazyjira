@@ -14,7 +14,7 @@ const VERSION_2 = "/rest/api/2"
 const VERSION_3 = "/rest/api/3"
 
 type ClientInterface interface {
-	NewRequest(method, endpoint string, params url.Values, body io.Reader) (*http.Request, error)
+	NewRequest(method, endpoint string, params url.Values, body io.Reader) ([]byte, error)
 }
 
 type Client struct {
@@ -26,7 +26,6 @@ type Client struct {
 
 func NewClient(cfg *config.Config) *Client {
 	httpClient := &http.Client{}
-
 	return &Client{
 		httpClient:      httpClient,
 		BaseURL:         cfg.JiraURL,
@@ -45,9 +44,15 @@ func (c *Client) UseV3() *Client {
 	return c
 }
 
-func (c *Client) NewRequest(method, uri string, params url.Values, body io.Reader) ([]byte, error) {
-	baseRestEndpoint := c.BaseURL + "/" + c.version
-	req, err := http.NewRequest(method, fmt.Sprintf("%s%s?%s", baseRestEndpoint, uri, params.Encode()), body)
+func (c *Client) NewRequest(method, endpoint string, params url.Values, body io.Reader) ([]byte, error) {
+	baseEndpoint := c.BaseURL + "/" + c.version
+	reqsUri := fmt.Sprintf("%s%s", baseEndpoint, endpoint)
+
+	if params != nil {
+		reqsUri = reqsUri + fmt.Sprintf("?%s", params.Encode())
+	}
+
+	req, err := http.NewRequest(method, reqsUri, body)
 	if err != nil {
 		return nil, err
 	}
