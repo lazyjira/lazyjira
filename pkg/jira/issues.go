@@ -15,10 +15,15 @@ type IssueResponse struct {
 }
 
 type Issue struct {
-	Expand string `json:"expand"`
-	ID     string `json:"id"`
-	Key    string `json:"key"`
-	Fields Fields `json:"fields"`
+	Expand         string         `json:"expand"`
+	ID             string         `json:"id"`
+	Key            string         `json:"key"`
+	Fields         Fields         `json:"fields"`
+	RenderedFields RenderedFields `json:"renderedFields"`
+}
+
+type RenderedFields struct {
+	Description string `json:"description"`
 }
 
 type Fields struct {
@@ -38,6 +43,10 @@ func (i Issue) Title() string {
 
 func (i Issue) Description() string {
 	return ""
+}
+
+func (i Issue) GetRenderedDescription() string {
+	return i.RenderedFields.Description
 }
 
 // TODO: Broken

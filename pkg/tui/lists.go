@@ -74,8 +74,8 @@ func getAssignedIssues(client *jira.Client) ([]jira.Issue, error) {
 
 	params := url.Values{}
 	params.Add("jql", jqlQuery)
-	params.Add("fields", "summary,status")
-
+	params.Add("fields", "summary,status,description")
+	params.Add("expand", "renderedFields")
 	resp, err := jira.SearchIssues(client, params)
 
 	if err != nil {

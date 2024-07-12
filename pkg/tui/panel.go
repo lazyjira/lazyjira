@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -37,7 +38,26 @@ func (p *panel) View() string {
 		}
 		renderedTabs = append(renderedTabs, style.Render(t))
 	}
+
 	tabsRow := lipgloss.JoinHorizontal(lipgloss.Top, renderedTabs...)
-	content := windowStyle.Render(p.tabContent[p.activeTab])
+
+	markdownOutput, err := renderMarkdown(p.tabContent[p.activeTab])
+	if err != nil {
+		markdownOutput = "Failed to render markdown content: " + err.Error()
+	}
+
+	content := windowStyle.Render(markdownOutput)
+
 	return lipgloss.JoinVertical(lipgloss.Top, tabsRow, content)
+}
+
+func renderMarkdown(md string) (string, error) {
+	renderer, err := glamour.NewTermRenderer(
+		glamour.WithStandardStyle("dark"),
+	)
+	if err != nil {
+		return "", err
+	}
+
+	return renderer.Render(md)
 }

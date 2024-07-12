@@ -1,6 +1,7 @@
 package tui
 
 import (
+	md "github.com/JohannesKaufmann/html-to-markdown"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -21,13 +22,6 @@ func NewTuiModel(client *jira.Client) *model {
 		ready: false,
 	}
 
-	m.panel.tabs = []string{"Tab 1", "Tab 2", "Tab 3"}
-	m.panel.tabContent = []string{
-		"Content for Tab 1",
-		"Content for Tab 2",
-		"Content for Tab 3",
-	}
-
 	defaultList := list.NewDefaultDelegate()
 	defaultList.ShowDescription = false
 
@@ -35,6 +29,15 @@ func NewTuiModel(client *jira.Client) *model {
 	m.createAssignedIssuesList(client, defaultList)
 	m.createProjectsList(client, defaultList)
 	m.createEpicsList(client, defaultList)
+
+	m.panel.tabs = []string{"Tab 1", "Tab 2", "Tab 3"}
+	m.panel.tabContent = []string{
+		"Content for Tab 1",
+		"Content for Tab 2",
+		"Content for Tab 3",
+	}
+
+	loadIssueDescriptionTab(m)
 
 	m.ready = true
 
@@ -69,6 +72,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			return m, nil
 		}
+
 		// honestly not sure if this is the best way but it works
 		if m.focus >= focusOnList1 && m.focus <= focusOnList3 {
 			listIndex := int(m.focus) - int(focusOnList1)
@@ -87,6 +91,13 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
+	if m.focus == 0 {
+		m.panel.tabs = []string{"Description", "Tab 2", "Tab 3"}
+	} else {
+		m.panel.tabs = []string{"Issues", "Tab 2", "Tab 3"}
+	}
+
+	loadIssueDescriptionTab(m)
 	return m, tea.Batch(cmds...)
 }
 
@@ -108,4 +119,18 @@ func (m *model) View() string {
 	panelView := m.panel.View()
 	mainView := lipgloss.JoinHorizontal(lipgloss.Top, listView, panelView)
 	return mainView
+}
+
+func loadIssueDescriptionTab(m *model) {
+	if m.focus == 0 {
+		selectedItem := m.lists[m.focus].SelectedItem().(jira.Issue)
+		converter := md.NewConverter("", true, nil)
+		markdown, err := converter.ConvertString(selectedItem.GetRenderedDescription())
+
+		if err != nil {
+			markdown = ""
+		}
+
+		m.panel.tabContent[0] = markdown
+	}
 }
