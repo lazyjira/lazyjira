@@ -1,6 +1,8 @@
 package tui
 
 import (
+	"sync"
+
 	md "github.com/JohannesKaufmann/html-to-markdown"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
@@ -15,20 +17,30 @@ type model struct {
 	lists  [3]list.Model
 	width  int
 	height int
+	client *jira.Client
 }
 
 func NewTuiModel(client *jira.Client) *model {
 	m := &model{
-		ready: false,
+		ready:  false,
+		client: client,
 	}
 
+	return m
+}
+
+func (m *model) Init() tea.Cmd {
 	defaultList := list.NewDefaultDelegate()
 	defaultList.ShowDescription = false
 
-	// TODO: I feel I can probably leverage go routines or something here?
-	m.createAssignedIssuesList(client, defaultList)
-	m.createProjectsList(client, defaultList)
-	m.createEpicsList(client, defaultList)
+	wg := sync.WaitGroup{}
+	wg.Add(3)
+
+	go m.createAssignedIssuesList(defaultList, &wg)
+	go m.createProjectsList(defaultList, &wg)
+	go m.createEpicsList(defaultList, &wg)
+
+	wg.Wait()
 
 	m.panel.tabs = []string{"Tab 1", "Tab 2", "Tab 3"}
 	m.panel.tabContent = []string{
@@ -41,10 +53,6 @@ func NewTuiModel(client *jira.Client) *model {
 
 	m.ready = true
 
-	return m
-}
-
-func (m *model) Init() tea.Cmd {
 	return nil
 }
 
@@ -73,9 +81,8 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 
-		// honestly not sure if this is the best way but it works
-		if m.focus >= focusOnList1 && m.focus <= focusOnList3 {
-			listIndex := int(m.focus) - int(focusOnList1)
+		if m.focus >= IssuesList && m.focus <= EpicsList {
+			listIndex := int(m.focus) - int(IssuesList)
 			if listIndex >= 0 && listIndex < len(m.lists) {
 				m.lists[listIndex], cmd = m.lists[listIndex].Update(msg)
 				cmds = append(cmds, cmd)
@@ -91,10 +98,9 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
-	if m.focus == 0 {
+	m.panel.tabs = []string{"Issues", "Tab 2", "Tab 3"}
+	if m.focus == IssuesList {
 		m.panel.tabs = []string{"Description", "Tab 2", "Tab 3"}
-	} else {
-		m.panel.tabs = []string{"Issues", "Tab 2", "Tab 3"}
 	}
 
 	loadIssueDescriptionTab(m)
@@ -109,7 +115,7 @@ func (m *model) View() string {
 	var views []string
 	for i, list := range m.lists {
 		listStyle := unfocusedStyle
-		if m.focus == focusState(focusOnList1+focusState(i)) {
+		if m.focus == focusState(IssuesList+focusState(i)) {
 			listStyle = focusedStyle
 		}
 		views = append(views, listStyle.Render(list.View()))
