@@ -11,7 +11,7 @@ To setup and connect to your jira account, follow the following instructions:
 
 2. Setup cli to be able to authenticate and connect to your jira instance
 ```BASH
-laztjira config auth 
+lazyjira config auth 
 ```
 
 **Config options (examples):**
