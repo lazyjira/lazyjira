@@ -108,14 +108,15 @@ func (m *model) View() string {
 
 	var views []string
 	for i, list := range m.lists {
-		listStyle := unfocusedStyle
+		listStyle := unfocusedStyle.Width(m.width / 3)
 		if m.focus == focusState(focusOnList1+focusState(i)) {
-			listStyle = focusedStyle
+			listStyle = focusedStyle.Width(m.width / 3)
 		}
 		views = append(views, listStyle.Render(list.View()))
 	}
 
 	listView := lipgloss.JoinVertical(lipgloss.Top, views...)
+	m.panel.width = m.width
 	panelView := m.panel.View()
 	mainView := lipgloss.JoinHorizontal(lipgloss.Top, listView, panelView)
 	return mainView
