@@ -3,6 +3,7 @@ package tui
 import (
 	"log"
 	"net/url"
+	"sync"
 
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/lipgloss"
@@ -18,54 +19,57 @@ var (
 )
 
 const (
-	focusOnList1 = 0
-	focusOnList2 = 1
-	focusOnList3 = 2
+	IssuesList   = 0
+	ProjectsList = 1
+	EpicsList    = 2
 )
 
-func (m *model) createAssignedIssuesList(client *jira.Client, defaults list.DefaultDelegate) *model {
-	issues, _ := getAssignedIssues(client)
+func (m *model) createAssignedIssuesList(defaults list.DefaultDelegate, wg *sync.WaitGroup) *model {
+	defer wg.Done()
+	issues := getAssignedIssues(m.client)
 
 	var items []list.Item
 	for _, issue := range issues {
 		items = append(items, issue)
 	}
 
-	m.lists[0] = list.New(items, defaults, 30, 15)
-	m.lists[0].Title = "Assigned Issues"
-	m.lists[0].SetShowHelp(false)
+	m.lists[IssuesList] = list.New(items, defaults, 30, 15)
+	m.lists[IssuesList].Title = "Assigned Issues"
+	m.lists[IssuesList].SetShowHelp(false)
 	return m
 }
 
-func (m *model) createProjectsList(client *jira.Client, defaults list.DefaultDelegate) *model {
-	projects, _ := getRecentProjects(client)
+func (m *model) createProjectsList(defaults list.DefaultDelegate, wg *sync.WaitGroup) *model {
+	defer wg.Done()
+	projects := getRecentProjects(m.client)
 
 	var items []list.Item
 	for _, project := range projects {
 		items = append(items, project)
 	}
 
-	m.lists[1] = list.New(items, defaults, 30, 15)
-	m.lists[1].Title = "Projects"
-	m.lists[1].SetShowHelp(false)
+	m.lists[ProjectsList] = list.New(items, defaults, 30, 15)
+	m.lists[ProjectsList].Title = "Projects"
+	m.lists[ProjectsList].SetShowHelp(false)
 	return m
 }
-func (m *model) createEpicsList(client *jira.Client, defaults list.DefaultDelegate) *model {
+func (m *model) createEpicsList(defaults list.DefaultDelegate, wg *sync.WaitGroup) *model {
+	defer wg.Done()
 	// TODO: Get Epics endpoint
-	issues, _ := getAssignedIssues(client)
+	issues := getAssignedIssues(m.client)
 
 	var items []list.Item
 	for _, issue := range issues {
 		items = append(items, issue)
 	}
 
-	m.lists[2] = list.New(items, defaults, 30, 15)
-	m.lists[2].Title = "Epics"
-	m.lists[2].SetShowHelp(false)
+	m.lists[EpicsList] = list.New(items, defaults, 30, 15)
+	m.lists[EpicsList].Title = "Epics"
+	m.lists[EpicsList].SetShowHelp(false)
 	return m
 }
 
-func getAssignedIssues(client *jira.Client) ([]jira.Issue, error) {
+func getAssignedIssues(client *jira.Client) []jira.Issue {
 	builder := jira.NewJQLBuilder().
 		Equals("assignee", "currentUser()", true).
 		NotIn("status", []string{"Done", "Closed", "Resolved"})
@@ -82,15 +86,15 @@ func getAssignedIssues(client *jira.Client) ([]jira.Issue, error) {
 		log.Fatalf("Error loading configuration: %v", err)
 	}
 
-	return resp.Issues, nil
+	return resp.Issues
 }
 
-func getRecentProjects(client *jira.Client) ([]jira.Project, error) {
+func getRecentProjects(client *jira.Client) []jira.Project {
 	projects, err := jira.GetRecentProjects(client)
 
 	if err != nil {
 		log.Fatalf("Error loading configuration: %v", err)
 	}
 
-	return projects, nil
+	return projects
 }
