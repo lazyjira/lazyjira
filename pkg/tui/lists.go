@@ -26,7 +26,7 @@ const (
 
 func (m *model) createAssignedIssuesList(defaults list.DefaultDelegate, wg *sync.WaitGroup) *model {
 	defer wg.Done()
-	issues, _ := getAssignedIssues(m.client)
+	issues := getAssignedIssues(m.client)
 
 	var items []list.Item
 	for _, issue := range issues {
@@ -41,7 +41,7 @@ func (m *model) createAssignedIssuesList(defaults list.DefaultDelegate, wg *sync
 
 func (m *model) createProjectsList(defaults list.DefaultDelegate, wg *sync.WaitGroup) *model {
 	defer wg.Done()
-	projects, _ := getRecentProjects(m.client)
+	projects := getRecentProjects(m.client)
 
 	var items []list.Item
 	for _, project := range projects {
@@ -56,7 +56,7 @@ func (m *model) createProjectsList(defaults list.DefaultDelegate, wg *sync.WaitG
 func (m *model) createEpicsList(defaults list.DefaultDelegate, wg *sync.WaitGroup) *model {
 	defer wg.Done()
 	// TODO: Get Epics endpoint
-	issues, _ := getAssignedIssues(m.client)
+	issues := getAssignedIssues(m.client)
 
 	var items []list.Item
 	for _, issue := range issues {
@@ -69,7 +69,7 @@ func (m *model) createEpicsList(defaults list.DefaultDelegate, wg *sync.WaitGrou
 	return m
 }
 
-func getAssignedIssues(client *jira.Client) ([]jira.Issue, error) {
+func getAssignedIssues(client *jira.Client) []jira.Issue {
 	builder := jira.NewJQLBuilder().
 		Equals("assignee", "currentUser()", true).
 		NotIn("status", []string{"Done", "Closed", "Resolved"})
@@ -86,15 +86,15 @@ func getAssignedIssues(client *jira.Client) ([]jira.Issue, error) {
 		log.Fatalf("Error loading configuration: %v", err)
 	}
 
-	return resp.Issues, nil
+	return resp.Issues
 }
 
-func getRecentProjects(client *jira.Client) ([]jira.Project, error) {
+func getRecentProjects(client *jira.Client) []jira.Project {
 	projects, err := jira.GetRecentProjects(client)
 
 	if err != nil {
 		log.Fatalf("Error loading configuration: %v", err)
 	}
 
-	return projects, nil
+	return projects
 }
