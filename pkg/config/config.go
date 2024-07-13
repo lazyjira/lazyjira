@@ -86,7 +86,7 @@ func (c ConfigService) Load() (*Config, error) {
 	if err := c.v.ReadInConfig(); err != nil {
 
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			return nil, errors.New("config file not found, run `lazyjira config init`")
+			return nil, errors.New("config file not found, run `lazyjira config auth`")
 		}
 
 		return nil, err
