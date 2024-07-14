@@ -19,17 +19,19 @@ var (
 )
 
 type JiraModel struct {
-	width         int
-	height        int
-	columnSize    int
-	selectedIssue int
-	focusedTab    int
-	maxPanels     int
-	client        *jira.Client
-	projectItems  []jira.Project
-	projectsList  list.Model
-	issuesItems   []jira.Issue
-	issuesList    list.Model
+	width            int
+	height           int
+	columnSize       int
+	selectedIssue    int
+	focusedTab       int
+	maxPanels        int
+	showProjectsList bool
+	projectName      string
+	client           *jira.Client
+	projectItems     []jira.Project
+	projectsList     list.Model
+	issuesItems      []jira.Issue
+	issuesList       list.Model
 }
 
 func NewJiraTui(client *jira.Client) JiraModel {
@@ -41,11 +43,13 @@ func NewJiraTui(client *jira.Client) JiraModel {
 	initIssuesList.Title = "Assigned Issues"
 
 	return JiraModel{
-		client:       client,
-		focusedTab:   1,
-		maxPanels:    3,
-		projectsList: initProjectsList,
-		issuesList:   initIssuesList,
+		client:           client,
+		focusedTab:       1,
+		maxPanels:        3,
+		showProjectsList: false,
+		projectName:      "Selected Project Name",
+		projectsList:     initProjectsList,
+		issuesList:       initIssuesList,
 	}
 }
 
@@ -72,6 +76,7 @@ func (m *JiraModel) setProjectListItems(projects []jira.Project) {
 
 	m.projectsList = list.New(items, list.NewDefaultDelegate(), 30, 15)
 	m.projectsList.Title = "Projects"
+	m.projectsList.DisableQuitKeybindings()
 
 	m.projectItems = projects
 }
@@ -84,6 +89,7 @@ func (m *JiraModel) setIssuesListItems(issues []jira.Issue) {
 
 	m.issuesList = list.New(items, list.NewDefaultDelegate(), 30, 15)
 	m.issuesList.Title = "Assigned Issues"
+	m.issuesList.DisableQuitKeybindings()
 
 	m.issuesItems = issues
 }
@@ -120,17 +126,31 @@ func (m JiraModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.setIssuesListItems(msg.issuesItems)
 	}
 
-	m.projectsList, cmd = m.projectsList.Update(msg)
-	cmds = append(cmds, cmd)
+	if m.focusedTab == 1 {
+		m.projectsList, cmd = m.projectsList.Update(msg)
+		cmds = append(cmds, cmd)
+	}
 
-	m.issuesList, cmd = m.issuesList.Update(msg)
-	cmds = append(cmds, cmd)
+	if m.focusedTab == 2 {
+		m.issuesList, cmd = m.issuesList.Update(msg)
+		cmds = append(cmds, cmd)
+	}
 
 	return m, tea.Batch(cmds...)
 }
 
 func (m JiraModel) View() string {
 	return lipgloss.JoinHorizontal(lipgloss.Top, sidebarView(m), contentView(m, 3))
+}
+
+func projectSummaryView(m JiraModel, activeIndex int) string {
+	content := m.projectName
+
+	if m.focusedTab == activeIndex {
+		return panelStyleFocused.Width(m.columnSize * 3).Render(content)
+	}
+
+	return panelStyle.Width(m.columnSize * 3).Render(content)
 }
 
 func projectListView(m JiraModel, activeIndex int) string {
@@ -154,9 +174,16 @@ func issuesListView(m JiraModel, activeIndex int) string {
 }
 
 func sidebarView(m JiraModel) string {
+
+	projectView := projectSummaryView(m, 1)
+
+	if m.showProjectsList {
+		projectView = projectListView(m, 1)
+	}
+
 	return lipgloss.JoinVertical(
 		lipgloss.Top,
-		projectListView(m, 1),
+		projectView,
 		issuesListView(m, 2),
 	)
 }
