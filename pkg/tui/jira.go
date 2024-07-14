@@ -71,6 +71,10 @@ func (m *JiraModel) PrevPanel() {
 	m.focusedTab = (m.focusedTab + 2) % 4
 }
 
+func (m *JiraModel) ToggleProjectSwitch() {
+	m.showProjectsList = !m.showProjectsList
+}
+
 func (m *JiraModel) setProjectListItems(projects []jira.Project) {
 	var items []list.Item
 	for _, project := range projects {
@@ -112,7 +116,7 @@ func (m JiraModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.PrevPanel()
 		case "S":
 			if m.focusedTab == 1 {
-				m.showProjectsList = !m.showProjectsList
+				m.ToggleProjectSwitch()
 			}
 		}
 	case tea.WindowSizeMsg:
