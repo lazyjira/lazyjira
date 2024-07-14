@@ -19,7 +19,6 @@ var (
 )
 
 type JiraModel struct {
-	title         string
 	width         int
 	height        int
 	columnSize    int
@@ -42,7 +41,6 @@ func NewJiraTui(client *jira.Client) JiraModel {
 	initIssuesList.Title = "Assigned Issues"
 
 	return JiraModel{
-		title:        "Working",
 		client:       client,
 		focusedTab:   1,
 		maxPanels:    3,
