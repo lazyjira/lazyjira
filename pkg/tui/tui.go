@@ -8,6 +8,8 @@ import (
 	"github.com/matthewrobinsondev/lazyjira/pkg/jira"
 )
 
+// TODO: Get rid of this once the new version is working
+
 type model struct {
 	focus  focusState
 	ready  bool

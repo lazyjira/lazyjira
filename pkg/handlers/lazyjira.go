@@ -8,6 +8,7 @@ import (
 	"github.com/matthewrobinsondev/lazyjira/pkg/jira"
 	"github.com/matthewrobinsondev/lazyjira/pkg/tui"
 	"github.com/spf13/cobra"
+	"log"
 )
 
 func NewLazyJiraHandler(cmd *cobra.Command, args []string) error {
@@ -18,10 +19,11 @@ func NewLazyJiraHandler(cmd *cobra.Command, args []string) error {
 	}
 
 	jiraClient := jira.NewClient(cfg)
-	p := tea.NewProgram(tui.NewTuiModel(jiraClient), tea.WithAltScreen())
+
+	p := tea.NewProgram(tui.NewJiraTui(jiraClient), tea.WithAltScreen())
 
 	if _, err := p.Run(); err != nil {
-		return errors.New(fmt.Sprintf("Could not start the program: %v\n", err))
+		log.Fatalf("Error: %v", err)
 	}
 
 	return nil
