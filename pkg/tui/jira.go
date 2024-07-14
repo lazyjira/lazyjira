@@ -1,6 +1,7 @@
 package tui
 
 import (
+	help2 "github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -32,6 +33,7 @@ type JiraModel struct {
 	projectsList     list.Model
 	issuesItems      []jira.Issue
 	issuesList       list.Model
+	projectKMap      projectKM
 }
 
 func NewJiraTui(client *jira.Client) JiraModel {
@@ -50,6 +52,7 @@ func NewJiraTui(client *jira.Client) JiraModel {
 		projectName:      "Selected Project Name",
 		projectsList:     initProjectsList,
 		issuesList:       initIssuesList,
+		projectKMap:      projectKMKeys,
 	}
 }
 
@@ -107,6 +110,10 @@ func (m JiraModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.NextPanel()
 		case "shift+tab":
 			m.PrevPanel()
+		case "S":
+			if m.focusedTab == 1 {
+				m.showProjectsList = !m.showProjectsList
+			}
 		}
 	case tea.WindowSizeMsg:
 		m.height = msg.Height
@@ -144,7 +151,9 @@ func (m JiraModel) View() string {
 }
 
 func projectSummaryView(m JiraModel, activeIndex int) string {
-	content := m.projectName
+	help := help2.New()
+	summaryContainer := lipgloss.NewStyle().Padding(0, 1)
+	content := summaryContainer.Render(lipgloss.JoinVertical(lipgloss.Left, m.projectName, help.View(m.projectKMap)))
 
 	if m.focusedTab == activeIndex {
 		return panelStyleFocused.Width(m.columnSize * 3).Render(content)
@@ -164,6 +173,10 @@ func projectListView(m JiraModel, activeIndex int) string {
 }
 
 func issuesListView(m JiraModel, activeIndex int) string {
+	if m.showProjectsList {
+		return ""
+	}
+
 	content := m.issuesList.View()
 
 	if m.focusedTab == activeIndex {
