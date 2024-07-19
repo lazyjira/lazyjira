@@ -18,7 +18,7 @@ func (m projectKM) FullHelp() [][]key.Binding {
 
 var projectKMKeys = projectKM{
 	toggle: key.NewBinding(
-		key.WithKeys("S"),
-		key.WithHelp("S", "switch project"),
+		key.WithKeys("ctrl+s"),
+		key.WithHelp("ctrl+s", "switch project"),
 	),
 }

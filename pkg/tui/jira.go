@@ -9,6 +9,12 @@ import (
 	"log"
 )
 
+const (
+	Project = iota + 1
+	IssuesList
+	Details
+)
+
 var (
 	panelStyle = lipgloss.NewStyle().
 			Border(lipgloss.NormalBorder()).
@@ -114,8 +120,8 @@ func (m JiraModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.NextPanel()
 		case "shift+tab":
 			m.PrevPanel()
-		case "S":
-			if m.focusedTab == 1 {
+		case "ctrl+s":
+			if m.focusedTab == Project {
 				m.ToggleProjectSwitch()
 			}
 		}
@@ -137,12 +143,12 @@ func (m JiraModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.setIssuesListItems(msg.issuesItems)
 	}
 
-	if m.focusedTab == 1 {
+	if m.focusedTab == Project {
 		m.projectsList, cmd = m.projectsList.Update(msg)
 		cmds = append(cmds, cmd)
 	}
 
-	if m.focusedTab == 2 {
+	if m.focusedTab == IssuesList {
 		m.issuesList, cmd = m.issuesList.Update(msg)
 		cmds = append(cmds, cmd)
 	}
@@ -192,16 +198,16 @@ func issuesListView(m JiraModel, activeIndex int) string {
 
 func sidebarView(m JiraModel) string {
 
-	projectView := projectSummaryView(m, 1)
+	projectView := projectSummaryView(m, Project)
 
 	if m.showProjectsList {
-		projectView = projectListView(m, 1)
+		projectView = projectListView(m, Project)
 	}
 
 	return lipgloss.JoinVertical(
 		lipgloss.Top,
 		projectView,
-		issuesListView(m, 2),
+		issuesListView(m, IssuesList),
 	)
 }
 
