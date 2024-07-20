@@ -2,6 +2,7 @@ package jira
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"net/url"
 )
@@ -69,4 +70,25 @@ func SearchIssues(client ClientInterface, params url.Values) (*IssueResponse, er
 	}
 
 	return &resp, nil
+}
+
+func GetAssignedIssues(client ClientInterface) ([]Issue, error) {
+	// TODO: Add a test for this
+	builder := NewJQLBuilder().
+		Equals("assignee", "currentUser()", true).
+		NotIn("status", []string{"Done", "Closed", "Resolved"})
+
+	jqlQuery := builder.Build()
+
+	params := url.Values{}
+	params.Add("jql", jqlQuery)
+	params.Add("fields", "summary,status,description")
+	params.Add("expand", "renderedFields")
+	resp, err := SearchIssues(client, params)
+
+	if err != nil {
+		log.Fatalf("Error loading configuration: %v", err)
+	}
+
+	return resp.Issues, err
 }
