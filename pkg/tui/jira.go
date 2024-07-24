@@ -5,7 +5,8 @@ import (
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/matthewrobinsondev/lazyjira/pkg/jira"
+	"github.com/matthewrobinsondev/lazyjira/pkg/models"
+	"github.com/matthewrobinsondev/lazyjira/pkg/services"
 	"log"
 )
 
@@ -26,6 +27,8 @@ var (
 )
 
 type JiraModel struct {
+	issuesService    services.IssuesService
+	projectsService  services.ProjectsService
 	width            int
 	height           int
 	columnSize       int
@@ -34,15 +37,14 @@ type JiraModel struct {
 	maxPanels        int
 	showProjectsList bool
 	projectName      string
-	client           *jira.Client
-	projectItems     []jira.Project
+	projectItems     []models.Project
 	projectsList     list.Model
-	issuesItems      []jira.Issue
+	issuesItems      []models.Issue
 	issuesList       list.Model
 	projectKMap      projectKM
 }
 
-func NewJiraTui(client *jira.Client) JiraModel {
+func NewJiraTui(issuesService services.IssuesService, projectsService services.ProjectsService) JiraModel {
 
 	initProjectsList := list.New(make([]list.Item, 0), list.NewDefaultDelegate(), 0, 0)
 	initProjectsList.Title = "Projects"
@@ -51,7 +53,8 @@ func NewJiraTui(client *jira.Client) JiraModel {
 	initIssuesList.Title = "Assigned Issues"
 
 	return JiraModel{
-		client:           client,
+		issuesService:    issuesService,
+		projectsService:  projectsService,
 		focusedTab:       1,
 		maxPanels:        3,
 		showProjectsList: false,
@@ -64,8 +67,8 @@ func NewJiraTui(client *jira.Client) JiraModel {
 
 func (m JiraModel) Init() tea.Cmd {
 	return tea.Batch(
-		getProjectsList(m.client),
-		getIssuesList(m.client),
+		getProjectsList(m.projectsService),
+		getIssuesList(m.issuesService),
 	)
 }
 
@@ -81,7 +84,7 @@ func (m *JiraModel) ToggleProjectSwitch() {
 	m.showProjectsList = !m.showProjectsList
 }
 
-func (m *JiraModel) setProjectListItems(projects []jira.Project) {
+func (m *JiraModel) setProjectListItems(projects []models.Project) {
 	var items []list.Item
 	for _, project := range projects {
 		items = append(items, project)
@@ -94,10 +97,10 @@ func (m *JiraModel) setProjectListItems(projects []jira.Project) {
 	m.projectItems = projects
 }
 
-func (m *JiraModel) setIssuesListItems(issues []jira.Issue) {
+func (m *JiraModel) setIssuesListItems(issues []models.Issue) {
 	var items []list.Item
-	for _, project := range issues {
-		items = append(items, project)
+	for _, issue := range issues {
+		items = append(items, issue)
 	}
 
 	m.issuesList = list.New(items, list.NewDefaultDelegate(), 30, 15)
@@ -223,18 +226,18 @@ func contentView(m JiraModel, activeIndex int) string {
 
 // Fetch Data
 type projectsListResponse struct {
-	projectsItems []jira.Project
+	projectsItems []models.Project
 	err           error
 }
 
 type issuesListResponse struct {
-	issuesItems []jira.Issue
+	issuesItems []models.Issue
 	err         error
 }
 
-func getIssuesList(c *jira.Client) tea.Cmd {
+func getIssuesList(i services.IssuesService) tea.Cmd {
 	return func() tea.Msg {
-		issues, err := jira.GetAssignedIssues(c)
+		issues, err := i.GetAssignedIssues()
 
 		return issuesListResponse{
 			issuesItems: issues,
@@ -243,9 +246,9 @@ func getIssuesList(c *jira.Client) tea.Cmd {
 	}
 }
 
-func getProjectsList(c *jira.Client) tea.Cmd {
+func getProjectsList(p services.ProjectsService) tea.Cmd {
 	return func() tea.Msg {
-		projects, err := jira.GetRecentProjects(c)
+		projects, err := p.GetRecentProjects()
 
 		return projectsListResponse{
 			projectsItems: projects,

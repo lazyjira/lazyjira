@@ -1,19 +1,23 @@
-package jira
+package query
 
 import (
 	"fmt"
 	"strings"
 )
 
-type JQLBuilder struct {
+type Query interface {
+	Build() string
+}
+
+type JQLQueryBuilder struct {
 	conditions []string
 }
 
-func NewJQLBuilder() *JQLBuilder {
-	return &JQLBuilder{}
+func NewJQLQuery() JQLQueryBuilder {
+	return JQLQueryBuilder{}
 }
 
-func (b *JQLBuilder) Equals(field, value string, isFunction bool) *JQLBuilder {
+func (b JQLQueryBuilder) Equals(field, value string, isFunction bool) JQLQueryBuilder {
 	if isFunction {
 		b.conditions = append(b.conditions, fmt.Sprintf("%s = %s", field, value))
 		return b
@@ -23,7 +27,7 @@ func (b *JQLBuilder) Equals(field, value string, isFunction bool) *JQLBuilder {
 	return b
 }
 
-func (b *JQLBuilder) In(field string, values []string) *JQLBuilder {
+func (b JQLQueryBuilder) In(field string, values []string) JQLQueryBuilder {
 	quotedValues := make([]string, len(values))
 
 	for i, v := range values {
@@ -36,7 +40,7 @@ func (b *JQLBuilder) In(field string, values []string) *JQLBuilder {
 	return b
 }
 
-func (b *JQLBuilder) NotIn(field string, values []string) *JQLBuilder {
+func (b JQLQueryBuilder) NotIn(field string, values []string) JQLQueryBuilder {
 	quotedValues := make([]string, len(values))
 
 	for i, v := range values {
@@ -49,7 +53,7 @@ func (b *JQLBuilder) NotIn(field string, values []string) *JQLBuilder {
 	return b
 }
 
-func (b *JQLBuilder) Build() string {
+func (b *JQLQueryBuilder) Build() string {
 	if len(b.conditions) == 0 {
 		return ""
 	}
