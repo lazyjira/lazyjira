@@ -1,9 +1,4 @@
-package jira
-
-import (
-	"encoding/json"
-	"net/http"
-)
+package models
 
 type Project struct {
 	Self            string          `json:"self"`
@@ -29,24 +24,6 @@ func (p Project) Description() string {
 	return ""
 }
 
-// TODO: Broken
 func (p Project) FilterValue() string {
-	return p.Key + ": " + p.ProjectCategory.Name
-}
-
-func GetRecentProjects(client ClientInterface) ([]Project, error) {
-	apiResp, err := client.NewRequest(http.MethodGet, "/project/recent", nil, nil)
-
-	if err != nil {
-		return nil, err
-	}
-
-	var projects []Project
-	err = json.Unmarshal(apiResp, &projects)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return projects, nil
+	return p.Name
 }

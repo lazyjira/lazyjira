@@ -1,11 +1,4 @@
-package jira
-
-import (
-	"encoding/json"
-	"log"
-	"net/http"
-	"net/url"
-)
+package models
 
 type IssueResponse struct {
 	Expand     string  `json:"expand"`
@@ -50,45 +43,6 @@ func (i Issue) GetRenderedDescription() string {
 	return i.RenderedFields.Description
 }
 
-// TODO: Broken
 func (i Issue) FilterValue() string {
-	return i.Key + " " + i.Fields.Summary
-}
-
-func SearchIssues(client ClientInterface, params url.Values) (*IssueResponse, error) {
-	apiResp, err := client.NewRequest(http.MethodGet, "/search", params, nil)
-
-	if err != nil {
-		return nil, err
-	}
-
-	var resp IssueResponse
-	err = json.Unmarshal(apiResp, &resp)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &resp, nil
-}
-
-func GetAssignedIssues(client ClientInterface) ([]Issue, error) {
-	// TODO: Add a test for this
-	builder := NewJQLBuilder().
-		Equals("assignee", "currentUser()", true).
-		NotIn("status", []string{"Done", "Closed", "Resolved"})
-
-	jqlQuery := builder.Build()
-
-	params := url.Values{}
-	params.Add("jql", jqlQuery)
-	params.Add("fields", "summary,status,description")
-	params.Add("expand", "renderedFields")
-	resp, err := SearchIssues(client, params)
-
-	if err != nil {
-		log.Fatalf("Error loading configuration: %v", err)
-	}
-
-	return resp.Issues, err
+	return i.Fields.Summary
 }
