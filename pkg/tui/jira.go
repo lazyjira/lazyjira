@@ -1,13 +1,16 @@
 package tui
 
 import (
+	"fmt"
 	help2 "github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/matthewrobinsondev/lazyjira/pkg/models"
 	"github.com/matthewrobinsondev/lazyjira/pkg/services"
 	"log"
+	"strings"
 )
 
 const (
@@ -19,11 +22,13 @@ const (
 var (
 	panelStyle = lipgloss.NewStyle().
 			Border(lipgloss.NormalBorder()).
-			BorderForeground(lipgloss.Color("241"))
+			BorderForeground(lipgloss.Color("241")).
+			Padding(0, 1)
 
 	panelStyleFocused = lipgloss.NewStyle().
 				Border(lipgloss.NormalBorder()).
-				BorderForeground(lipgloss.Color("69"))
+				BorderForeground(lipgloss.Color("69")).
+				Padding(0, 1)
 )
 
 type JiraModel struct {
@@ -32,7 +37,7 @@ type JiraModel struct {
 	width            int
 	height           int
 	columnSize       int
-	selectedIssue    int
+	selectedIssue    models.Issue
 	focusedTab       int
 	maxPanels        int
 	showProjectsList bool
@@ -127,6 +132,10 @@ func (m JiraModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.focusedTab == Project {
 				m.ToggleProjectSwitch()
 			}
+		case "enter":
+			if m.focusedTab == IssuesList {
+				m.selectedIssue = m.issuesList.SelectedItem().(models.Issue)
+			}
 		}
 	case tea.WindowSizeMsg:
 		m.height = msg.Height
@@ -208,20 +217,36 @@ func sidebarView(m JiraModel) string {
 	}
 
 	return lipgloss.JoinVertical(
-		lipgloss.Top,
+		lipgloss.Right,
 		projectView,
 		issuesListView(m, IssuesList),
 	)
 }
 
 func contentView(m JiraModel, activeIndex int) string {
-	content := "Details"
+	var output strings.Builder
 
-	if m.focusedTab == activeIndex {
-		return panelStyleFocused.Width(m.columnSize * 9).Height(m.height - 2).Render("Details")
+	if (models.Issue{} != m.selectedIssue) {
+		output.Write([]byte(renderIssueDescription(m.selectedIssue)))
 	}
 
-	return panelStyle.Width(m.columnSize * 9).Height(m.height - 2).Render(content)
+	if m.focusedTab == activeIndex {
+		return panelStyleFocused.Width(m.columnSize * 9).Height(m.height - 2).Render(output.String())
+	}
+
+	return panelStyle.Width(m.columnSize * 9).Height(m.height - 2).Render(output.String())
+}
+
+func renderIssueDescription(i models.Issue) string {
+	var output strings.Builder
+
+	output.Write([]byte(fmt.Sprintf("# %s", i.Fields.Summary)))
+	output.Write([]byte(fmt.Sprintf("\n## %s", i.Fields.Status.Name)))
+	output.Write([]byte(fmt.Sprintf("\n## %s", i.Key)))
+	output.Write([]byte(fmt.Sprintf("\n %s", i.RenderedFields.Description)))
+
+	out, _ := glamour.Render(output.String(), "dark")
+	return out
 }
 
 // Fetch Data
