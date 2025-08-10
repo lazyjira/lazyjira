@@ -190,7 +190,6 @@ func (m JiraModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.width = msg.Width
 		m.columnSize = msg.Width / COLUMN_COUNT
 
-		// Update list sizes
 		listWidth := m.columnSize*LEFT_PANEL_COLUMNS - LIST_WIDTH_OFFSET
 		if listWidth < MIN_LIST_WIDTH {
 			listWidth = MIN_LIST_WIDTH
@@ -288,7 +287,6 @@ func contentView(m JiraModel, activeIndex int) string {
 		if selectedIndex >= 0 && selectedIndex < len(m.issuesItems) {
 			issue := m.issuesItems[selectedIndex]
 
-			// Enhanced tab styling
 			detailsTabStyle := lipgloss.NewStyle().
 				Padding(0, 2).
 				Background(lipgloss.Color("238")).
@@ -320,7 +318,6 @@ func contentView(m JiraModel, activeIndex int) string {
 
 			var mainContent string
 			if m.rightPanelTab == DetailsTab {
-				// Enhanced details view with better styling
 				titleSection := lipgloss.JoinVertical(lipgloss.Left,
 					lipgloss.NewStyle().
 						Foreground(lipgloss.Color("69")).
@@ -362,7 +359,6 @@ func contentView(m JiraModel, activeIndex int) string {
 					renderedDescription,
 				)
 			} else {
-				// Enhanced comments view with better styling
 				if len(issue.Fields.Comment.Comments) == 0 {
 					mainContent = lipgloss.JoinVertical(lipgloss.Left,
 						lipgloss.NewStyle().
@@ -378,7 +374,6 @@ func contentView(m JiraModel, activeIndex int) string {
 				} else {
 					var commentStrings []string
 
-					// Add header
 					commentStrings = append(commentStrings,
 						lipgloss.NewStyle().
 							Foreground(lipgloss.Color("12")).
@@ -389,7 +384,6 @@ func contentView(m JiraModel, activeIndex int) string {
 					)
 
 					for i, comment := range issue.Fields.Comment.Comments {
-						// Author and date header
 						authorStyle := lipgloss.NewStyle().
 							Background(lipgloss.Color("69")).
 							Foreground(lipgloss.Color("15")).
@@ -406,14 +400,12 @@ func contentView(m JiraModel, activeIndex int) string {
 							dateStyle.Render(formatDate(comment.Created)),
 						)
 
-						// Comment content with text formatting
 						commentText := extractCommentText(comment)
 						if commentText == "" {
 							commentText = "_No content_"
 						}
 						renderedComment := formatText(commentText, m.columnSize*RIGHT_PANEL_COLUMNS-4)
 
-						// Comment container with border
 						commentContainer := lipgloss.NewStyle().
 							Border(lipgloss.NormalBorder(), false, false, false, true).
 							BorderForeground(lipgloss.Color("241")).
@@ -425,7 +417,6 @@ func contentView(m JiraModel, activeIndex int) string {
 							commentContainer.Render(renderedComment),
 						)
 
-						// Add separator between comments (except for the last one)
 						if i < len(issue.Fields.Comment.Comments)-1 {
 							commentStrings = append(commentStrings, "")
 						}
@@ -442,7 +433,6 @@ func contentView(m JiraModel, activeIndex int) string {
 			)
 		}
 	} else {
-		// No issue selected state
 		detailsTabStyle := lipgloss.NewStyle().
 			Padding(0, 2).
 			Background(lipgloss.Color("69")).
@@ -480,7 +470,6 @@ func contentView(m JiraModel, activeIndex int) string {
 	return panelStyle.Width(m.columnSize*RIGHT_PANEL_COLUMNS + 2).Height(m.height - PANEL_HEIGHT_OFFSET).Render(content)
 }
 
-// Fetch Data
 type projectsListResponse struct {
 	projectsItems []models.Project
 	err           error
