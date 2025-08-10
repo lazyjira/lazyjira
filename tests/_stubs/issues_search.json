@@ -97,46 +97,51 @@
           "simplified": false,
           "style": "classic"
         },
-        "comment": [
-          {
-            "author": {
-              "accountId": "5b10a2844c20165700ede21g",
-              "active": false,
-              "displayName": "Mia Krystof",
-              "self": "https://your-domain.atlassian.net/rest/api/3/user?accountId=5b10a2844c20165700ede21g"
-            },
-            "body": {
-              "type": "doc",
-              "version": 1,
-              "content": [
-                {
-                  "type": "paragraph",
-                  "content": [
-                    {
-                      "type": "text",
-                      "text": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque eget venenatis elit. Duis eu justo eget augue iaculis fermentum. Sed semper quam laoreet nisi egestas at posuere augue semper."
-                    }
-                  ]
-                }
-              ]
-            },
-            "created": "2021-01-17T12:34:00.000+0000",
-            "id": "10000",
-            "self": "https://your-domain.atlassian.net/rest/api/3/issue/10010/comment/10000",
-            "updateAuthor": {
-              "accountId": "5b10a2844c20165700ede21g",
-              "active": false,
-              "displayName": "Mia Krystof",
-              "self": "https://your-domain.atlassian.net/rest/api/3/user?accountId=5b10a2844c20165700ede21g"
-            },
-            "updated": "2021-01-18T23:45:00.000+0000",
-            "visibility": {
-              "identifier": "Administrators",
-              "type": "role",
-              "value": "Administrators"
+        "comment": {
+          "comments": [
+            {
+              "author": {
+                "accountId": "5b10a2844c20165700ede21g",
+                "active": false,
+                "displayName": "Mia Krystof",
+                "self": "https://your-domain.atlassian.net/rest/api/3/user?accountId=5b10a2844c20165700ede21g"
+              },
+              "body": {
+                "type": "doc",
+                "version": 1,
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque eget venenatis elit. Duis eu justo eget augue iaculis fermentum. Sed semper quam laoreet nisi egestas at posuere augue semper."
+                      }
+                    ]
+                  }
+                ]
+              },
+              "created": "2021-01-17T12:34:00.000+0000",
+              "id": "10000",
+              "self": "https://your-domain.atlassian.net/rest/api/3/issue/10010/comment/10000",
+              "updateAuthor": {
+                "accountId": "5b10a2844c20165700ede21g",
+                "active": false,
+                "displayName": "Mia Krystof",
+                "self": "https://your-domain.atlassian.net/rest/api/3/user?accountId=5b10a2844c20165700ede21g"
+              },
+              "updated": "2021-01-18T23:45:00.000+0000",
+              "visibility": {
+                "identifier": "Administrators",
+                "type": "role",
+                "value": "Administrators"
+              }
             }
-          }
-        ],
+          ],
+          "maxResults": 1,
+          "total": 1,
+          "startAt": 0
+        },
         "issuelinks": [
           {
             "id": "10001",
@@ -231,6 +236,9 @@
           "timeSpent": "6m",
           "timeSpentSeconds": 400
         }
+      },
+      "renderedFields": {
+        "description": "# Main Order Flow Issue\n\nThe main order flow is currently **broken** and needs immediate attention.\n\n## Steps to Reproduce\n\n1. Navigate to the order page\n2. Add items to cart\n3. Proceed to checkout\n4. Payment fails with error\n\n## Expected Behavior\n\n- Payment should process successfully\n- Order should be created\n- Confirmation email should be sent\n\n## Current Behavior\n\n- Payment gateway returns `500 Internal Server Error`\n- No order is created\n- Customer receives no feedback\n\n## Technical Details\n\n```javascript\n// Error in payment processing\nconst processPayment = async (paymentData) => {\n  // This is failing\n  return await paymentGateway.charge(paymentData);\n};\n```\n\n**Priority:** High  \n**Impact:** All customers affected"
       },
       "id": "10002",
       "key": "ED-1",

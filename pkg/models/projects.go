@@ -17,11 +17,14 @@ type ProjectCategory struct {
 }
 
 func (p Project) Title() string {
-	return p.Key + ": " + p.ProjectCategory.Name
+	return "📁 " + p.Key + ": " + p.Name
 }
 
 func (p Project) Description() string {
-	return ""
+	if p.ProjectCategory.Name != "" {
+		return "Category: " + p.ProjectCategory.Name + " | Type: " + p.ProjectTypeKey
+	}
+	return "Type: " + p.ProjectTypeKey
 }
 
 func (p Project) FilterValue() string {

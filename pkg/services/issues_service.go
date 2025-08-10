@@ -30,7 +30,7 @@ func (s IssuesJiraService) GetAssignedIssues() ([]models.Issue, error) {
 
 	params := url.Values{}
 	params.Add("jql", builder.Build())
-	params.Add("fields", "summary,status,description")
+	params.Add("fields", "summary,status,description,comment")
 	params.Add("expand", "renderedFields")
 
 	resp, err := s.jiraClient.NewRequest(http.MethodGet, "/search", params, nil, clients.VERSION_3)
